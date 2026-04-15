@@ -1,0 +1,9 @@
+ultralytics>=8.1.0
+mediapipe>=0.10.33
+torch
+torchvision
+opencv-python
+numpy
+fastapi
+uvicorn[standard]
+websockets

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BROTEUS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#1a1a1e;color:#eee;font-family:'DM Sans',sans-serif;overflow:hidden;width:100vw;height:100vh;display:flex;flex-direction:column}
+  .hdr{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#222;border-bottom:1px solid #333}
+  .hdr .t{font-family:'Outfit',sans-serif;font-weight:900;font-size:17px;letter-spacing:4px}
+  .hdr .b{font-size:8px;letter-spacing:2px;color:#888;border:1px solid #444;padding:2px 7px;border-radius:3px;margin-left:8px}
+  .dot{width:8px;height:8px;border-radius:50%;background:#c43a3a;display:inline-block}
+  .dot.on{background:#1a9e55;animation:p 2s infinite}
+  @keyframes p{0%,100%{opacity:1}50%{opacity:0.5}}
+  .main{flex:1;display:flex;overflow:hidden}
+  .feed{flex:1;position:relative;background:#111;display:flex;align-items:center;justify-content:center}
+  #img{max-width:100%;max-height:100%;object-fit:contain;cursor:crosshair}
+  .nf{color:#555;font-size:13px}
+  .bar{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.7);padding:4px 10px;border-radius:4px;font-size:10px;color:#aaa}
+  .bar .v{color:#1a9e55;font-weight:700}
+  .fp{position:absolute;top:8px;right:8px;background:rgba(20,20,24,.95);border:2px solid #00ffd0;border-radius:8px;overflow:hidden;display:none;max-width:320px}
+  .fp.open{display:block}
+  .fp-h{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#222;border-bottom:1px solid #333}
+  .fp-h .fn{font-size:12px;font-weight:700;color:#00ffd0}
+  .fp-x{background:none;border:1px solid #555;color:#aaa;cursor:pointer;padding:1px 6px;border-radius:3px;font-size:10px}
+  #fimg{width:100%;display:block}
+  .fi{padding:5px 10px;font-size:10px;color:#aaa}
+  .fi .fv{color:#00ffd0;font-weight:700}
+  .sb{width:290px;background:#1e1e22;border-left:1px solid #333;padding:14px;overflow-y:auto;transition:width .25s, padding .25s, opacity .25s}
+  .sb.hide{width:0;padding:0;opacity:0;overflow:hidden;border:none}
+  .sb-toggle{position:absolute;top:50%;right:290px;transform:translateY(-50%);background:#333;border:1px solid #555;color:#aaa;width:24px;height:48px;border-radius:4px 0 0 4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:10;transition:right .25s}
+  .sb-toggle:hover{background:#444;color:#fff}
+  .sb-toggle.shifted{right:0}
+  .s{margin-bottom:14px}
+  .st{font-size:8px;font-weight:600;letter-spacing:2px;color:#888;text-transform:uppercase;margin-bottom:5px}
+  .sr{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;color:#aaa}
+  .sr .v{color:#eee;font-weight:700}.sr .vg{color:#1a9e55;font-weight:700}
+  .btn{width:100%;padding:7px;background:#333;border:1px solid #555;color:#ccc;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;border-radius:5px;cursor:pointer;margin-bottom:3px;transition:all .15s}
+  .btn:hover{background:#444;color:#fff}
+  .btn.dng{background:rgba(196,58,58,.15);border-color:#c43a3a;color:#c43a3a}
+  .btn.rec{background:rgba(220,0,0,.3);border-color:#ff3333;color:#ff3333;animation:recPulse 1s infinite}
+  @keyframes recPulse{0%,100%{opacity:1}50%{opacity:.6}}
+  .fr{display:flex;gap:4px;margin-bottom:6px}
+  .fi-in{flex:1;padding:7px 9px;background:#2a2a2e;border:1px solid #444;border-radius:5px;color:#eee;font-size:12px;font-family:'DM Sans',sans-serif}
+  .fi-in:focus{border-color:#00ffd0;outline:none}
+  .fi-in::placeholder{color:#666}
+  .fb{padding:7px 12px;background:#00ffd0;border:none;color:#111;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;border-radius:5px;cursor:pointer}
+  .chip{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;background:#2a2a2e;border:1px solid #3a3a3e;border-radius:20px;font-size:10px;margin:2px}
+  .chip .cx{color:#888;cursor:pointer;font-size:12px}.chip .cx:hover{color:#c43a3a}
+  .obj{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#2a2a2e;border:1px solid #3a3a3e;border-radius:5px;cursor:pointer;font-size:11px;margin-bottom:2px;transition:all .15s}
+  .obj:hover{border-color:#00ffd0}.obj.sel{border-color:#00ffd0;background:rgba(0,255,208,.08)}
+  .obj .on{font-weight:600}.obj .oc{color:#1a9e55;font-weight:700}
+  .gest-panel{background:#252530;border:1px solid #3a3a3e;border-radius:6px;padding:8px 10px;margin-bottom:8px}
+  .gest-name{font-size:16px;font-weight:700;color:#00ffd0}
+  .gest-action{font-size:11px;color:#aaa;margin-top:2px}
+  .gest-src{font-size:9px;color:#666;margin-top:2px}
+  .gest-none{color:#555;font-size:11px}
+  .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);background:#222;border:1px solid #00ffd0;color:#eee;padding:8px 18px;border-radius:6px;font-size:12px;z-index:1000;opacity:0;transition:opacity .3s;pointer-events:none}
+  .toast.show{opacity:1}.toast.err{border-color:#c43a3a}
+  .em{color:#666;font-size:11px;padding:4px 0}
+  .teach-form{display:none;margin-top:6px}
+  .teach-form.open{display:block}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="hdr">
+  <div style="display:flex;align-items:center">
+    <div class="t">BROTEUS</div><div class="b">v2.1</div>
+  </div>
+  <div style="font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px">
+    <div class="dot" id="dot"></div><span id="stxt">OFF</span>
+  </div>
+</div>
+<div class="main">
+  <div class="feed">
+    <img id="img" style="display:none" onclick="feedClick(event)">
+    <div class="nf" id="nf">Click Connect</div>
+    <div class="bar" id="bar" style="display:none">
+      F:<span class="v" id="bF">0</span>
+      FPS:<span class="v" id="bFps">0</span>
+      <span class="v" id="bM">BROWSE</span>
+      <span id="bO"></span>
+    </div>
+    <div class="fp" id="fp">
+      <div class="fp-h"><span class="fn" id="fn">-</span><button class="fp-x" onclick="clrFocus()">ESC</button></div>
+      <img id="fimg"><div class="fi">Grip:<span class="fv" id="fS">-</span> Mode:<span class="fv" id="fM">-</span></div>
+    </div>
+  </div>
+  <button class="sb-toggle" id="sbToggle" onclick="toggleSB()" title="Toggle sidebar">&#9654;</button>
+  <div class="sb" id="sidebar">
+    <div class="s">
+      <div class="st">Connection</div>
+      <button class="btn" id="cBtn" onclick="toggle()">CONNECT</button>
+      <div class="sr"><span>FPS</span><span class="vg" id="sFps">-</span></div>
+    </div>
+    <div class="s">
+      <div class="st">Hand Gestures</div>
+      <div style="display:flex;gap:4px;margin-bottom:6px">
+        <div id="gestL" style="flex:1"><div class="gest-none">L: --</div></div>
+        <div id="gestR" style="flex:1"><div class="gest-none">R: --</div></div>
+      </div>
+      <div class="fr" style="margin-bottom:4px">
+        <select class="fi-in" id="recHand" style="flex:0 0 70px;padding:6px">
+          <option value="right">Right</option>
+          <option value="left">Left</option>
+        </select>
+        <button class="btn" id="recBtn" onclick="toggleRec()" style="flex:1;margin:0">RECORD</button>
+      </div>
+      <div class="teach-form" id="teachForm">
+        <div class="fr">
+          <input class="fi-in" id="gestName" placeholder="Gesture name...">
+        </div>
+        <div class="fr">
+          <input class="fi-in" id="gestAction" placeholder="ORION action (optional)">
+          <button class="fb" onclick="saveGesture()">SAVE</button>
+        </div>
+      </div>
+      <div id="gestList" style="margin-top:4px"></div>
+    </div>
+    <div class="s">
+      <div class="st">Hand Animations</div>
+      <div style="display:flex;gap:4px;margin-bottom:4px">
+        <div id="animL" style="flex:1"><div class="gest-none" style="font-size:10px">L: --</div></div>
+        <div id="animR" style="flex:1"><div class="gest-none" style="font-size:10px">R: --</div></div>
+      </div>
+      <div class="fr" style="margin-bottom:4px">
+        <select class="fi-in" id="animHand" style="flex:0 0 70px;padding:6px">
+          <option value="right">Right</option>
+          <option value="left">Left</option>
+        </select>
+        <button class="btn" id="animBtn" onclick="toggleAnimRec()" style="flex:1;margin:0;background:rgba(180,0,220,.15);border-color:#b400dc;color:#d070ff">RECORD ANIM</button>
+      </div>
+      <div class="teach-form" id="animTeachForm">
+        <div class="fr">
+          <input class="fi-in" id="animName" placeholder="Animation name...">
+        </div>
+        <div class="fr">
+          <input class="fi-in" id="animAction" placeholder="ORION action (optional)">
+          <button class="fb" onclick="saveAnim()" style="background:#b400dc">SAVE</button>
+        </div>
+      </div>
+      <div id="animList" style="margin-top:4px"></div>
+    </div>
+    <div class="s">
+      <div class="st">Find Objects</div>
+      <div class="fr">
+        <input class="fi-in" id="findIn" placeholder="Object name..." onkeydown="if(event.key==='Enter')addFind()">
+        <button class="fb" onclick="addFind()">FIND</button>
+      </div>
+      <div id="chips"><div class="em">Not looking for anything yet.</div></div>
+    </div>
+    <div class="s">
+      <div class="st">Detected Objects</div>
+      <div id="objList"><div class="em">No detections</div></div>
+    </div>
+    <div class="s">
+      <div class="st">Camera</div>
+      <div id="camList"><div class="em">Scanning...</div></div>
+      <button class="btn" onclick="scanCams()" style="font-size:10px;margin-top:3px">RESCAN</button>
+    </div>
+  </div>
+</div>
+<script>
+const img=document.getElementById('img'),nf=document.getElementById('nf'),bar=document.getElementById('bar'),fp=document.getElementById('fp');
+const API='http://localhost:8100',WS='ws://localhost:8100/ws/frames';
+let ws=null,fc=0,ff=0,lt=performance.now(),fps=0,dets=[],fi=null,sc=[],recording=false;
+
+function toast(m,e){const t=document.getElementById('toast');t.textContent=m;t.className=e?'toast err show':'toast show';setTimeout(()=>t.className='toast',3000)}
+function ss(on){document.getElementById('dot').className=on?'dot on':'dot';document.getElementById('stxt').textContent=on?'LIVE':'OFF';
+  document.getElementById('cBtn').textContent=on?'DISCONNECT':'CONNECT';
+  img.style.display=on?'block':'none';nf.style.display=on?'none':'block';bar.style.display=on?'block':'none'}
+
+function connect(){if(ws)return;ws=new WebSocket(WS);ws.onopen=()=>ss(true);ws.onclose=()=>{ws=null;ss(false)};ws.onerror=()=>{ws=null;ss(false)};
+  ws.onmessage=(ev)=>{const d=JSON.parse(ev.data);if(d.type!=='frame')return;
+    img.src='data:image/jpeg;base64,'+d.frame;fc++;ff++;
+    const now=performance.now();if(now-lt>1000){fps=Math.round(ff*1000/(now-lt));ff=0;lt=now}
+    document.getElementById('bF').textContent=d.metadata?.sequence_number||fc;
+    document.getElementById('bFps').textContent=fps;document.getElementById('sFps').textContent=fps;
+    if(d.detections){dets=d.detections;updObjs()}
+    document.getElementById('bO').textContent=dets.length+' obj';
+    document.getElementById('bM').textContent=fi!==null?'FOCUS':'BROWSE';
+    if(d.gesture){updGesture(d.gesture);updAnim(d.gesture)}else{document.getElementById('gestL').innerHTML='<div class="gest-none">L: --</div>';document.getElementById('gestR').innerHTML='<div class="gest-none">R: --</div>';document.getElementById('animL').innerHTML='<div class="gest-none" style="font-size:10px">L: --</div>';document.getElementById('animR').innerHTML='<div class="gest-none" style="font-size:10px">R: --</div>'}
+    if(d.focus_crop){document.getElementById('fimg').src='data:image/jpeg;base64,'+d.focus_crop;fp.classList.add('open');
+      const fs=d.focus_stats||{};document.getElementById('fS').textContent=fs.grip_score||'-';document.getElementById('fM').textContent=fs.mode||'-'}
+    if(d.search_list){sc=d.search_list;updChips()}}}
+
+function disconnect(){if(ws)ws.close();ws=null;ss(false)}
+function toggle(){ws?disconnect():connect()}
+
+// == Gesture ==
+function updGesture(g){
+  // g = {left: {...} or null, right: {...} or null}
+  const lEl=document.getElementById('gestL'), rEl=document.getElementById('gestR');
+  if(g.left){
+    const gl=g.left;const src=gl.source==='learned'?'<span style="color:#ff0;font-size:7px">LEARNED</span>':'';
+    const ext=['T','I','M','R','P'].map((n,i)=>`<span style="color:${gl.extended[i]?'#0f0':'#f44'}">${n}</span>`).join('');
+    let recInfo='';
+    if(gl.recording){const cov=gl.rotation_coverage||0;const ns=gl.samples_count||0;
+      recInfo=`<div style="margin-top:3px"><span style="color:#f33">REC</span> ${ns} samples · Rotation: <span style="color:${cov>0.5?'#0f0':'#fa0'}">${Math.round(cov*100)}%</span></div>`}
+    lEl.innerHTML=`<div class="gest-panel" style="border-color:#d4b400">
+      <div class="gest-name" style="color:#d4b400;font-size:14px">L: ${gl.label}</div>
+      <div class="gest-action">${gl.action} (${Math.round(gl.confidence*100)}%) ${src}</div>
+      <div class="gest-src">${ext}</div>${recInfo}</div>`
+  } else { lEl.innerHTML='<div class="gest-none">L: --</div>' }
+  if(g.right){
+    const gr=g.right;const src=gr.source==='learned'?'<span style="color:#ff0;font-size:7px">LEARNED</span>':'';
+    const ext=['T','I','M','R','P'].map((n,i)=>`<span style="color:${gr.extended[i]?'#0f0':'#f44'}">${n}</span>`).join('');
+    let recInfo='';
+    if(gr.recording){const cov=gr.rotation_coverage||0;const ns=gr.samples_count||0;
+      recInfo=`<div style="margin-top:3px"><span style="color:#f33">REC</span> ${ns} samples · Rotation: <span style="color:${cov>0.5?'#0f0':'#fa0'}">${Math.round(cov*100)}%</span></div>`}
+    rEl.innerHTML=`<div class="gest-panel" style="border-color:#00c864">
+      <div class="gest-name" style="color:#00c864;font-size:14px">R: ${gr.label}</div>
+      <div class="gest-action">${gr.action} (${Math.round(gr.confidence*100)}%) ${src}</div>
+      <div class="gest-src">${ext}</div>${recInfo}</div>`
+  } else { rEl.innerHTML='<div class="gest-none">R: --</div>' }
+}
+
+function toggleRec(){
+  if(!ws||ws.readyState!==1){toast('Connect first',true);return}
+  if(!recording){
+    recording=true;
+    document.getElementById('recBtn').textContent='STOP';
+    document.getElementById('recBtn').className='btn rec';
+    document.getElementById('teachForm').className='teach-form';
+    const hand=document.getElementById('recHand').value;
+    ws.send(JSON.stringify({type:'gesture_record_start',hand:hand}));
+    toast(`Recording ${hand} hand — hold gesture & rotate slowly`)
+  } else {
+    recording=false;
+    document.getElementById('recBtn').textContent='RECORD';
+    document.getElementById('recBtn').className='btn';
+    document.getElementById('teachForm').className='teach-form open';
+    document.getElementById('gestName').focus();
+  }}
+
+function saveGesture(){
+  const name=document.getElementById('gestName').value.trim();
+  const action=document.getElementById('gestAction').value.trim()||'custom';
+  const hand=document.getElementById('recHand').value;
+  if(!name){toast('Enter a name',true);return}
+  if(ws&&ws.readyState===1)
+    ws.send(JSON.stringify({type:'gesture_record_stop',name:name,action:action,hand:hand}));
+  document.getElementById('gestName').value='';
+  document.getElementById('gestAction').value='';
+  document.getElementById('teachForm').className='teach-form';
+  toast(`Learned "${name}" (${hand} hand)`);
+  setTimeout(loadGestures,500)}
+
+async function loadGestures(){
+  try{const r=await fetch(`${API}/gestures`);const d=await r.json();
+    const el=document.getElementById('gestList');
+    let html='';
+    if(d.right_names&&d.right_names.length){
+      html+='<div class="st" style="margin-top:2px;color:#00c864">Right Hand</div>';
+      html+=d.right_names.map(n=>`<div class="chip">${n} (${d.right[n]||0}) <span class="cx" onclick="delGesture('${n.replace(/'/g,"\\'")}','right')">&times;</span></div>`).join('')}
+    if(d.left_names&&d.left_names.length){
+      html+='<div class="st" style="margin-top:4px;color:#d4b400">Left Hand</div>';
+      html+=d.left_names.map(n=>`<div class="chip">${n} (${d.left[n]||0}) <span class="cx" onclick="delGesture('${n.replace(/'/g,"\\'")}','left')">&times;</span></div>`).join('')}
+    el.innerHTML=html;
+  }catch(e){}}
+
+async function delGesture(name,hand){
+  await fetch(`${API}/gestures/remove?name=${encodeURIComponent(name)}&hand=${hand||'right'}`,{method:'POST'});
+  loadGestures();toast(`Removed "${name}"`)}
+
+// == Animations ==
+let animRecording=false;
+
+function updAnim(g){
+  // Update animation status from gesture data
+  const lEl=document.getElementById('animL'), rEl=document.getElementById('animR');
+  if(g.left&&g.left.animation&&g.left.animation.matched){
+    const a=g.left.animation;
+    lEl.innerHTML=`<div class="gest-panel" style="border-color:#b400dc;padding:4px 6px">
+      <div style="color:#d070ff;font-size:12px;font-weight:700">L: ${a.name}</div>
+      <div style="font-size:9px;color:#aaa">${a.action} (${Math.round(a.confidence*100)}%)</div></div>`
+  } else if(g.left&&g.left.animation&&g.left.animation.recording){
+    const a=g.left.animation;
+    lEl.innerHTML=`<div class="gest-panel" style="border-color:#b400dc;padding:4px 6px">
+      <div style="color:#ff3366;font-size:11px;font-weight:700">L: RECORDING</div>
+      <div style="font-size:9px;color:#aaa">${a.frames} frames</div></div>`
+  } else { lEl.innerHTML='<div class="gest-none" style="font-size:10px">L: --</div>' }
+  if(g.right&&g.right.animation&&g.right.animation.matched){
+    const a=g.right.animation;
+    rEl.innerHTML=`<div class="gest-panel" style="border-color:#b400dc;padding:4px 6px">
+      <div style="color:#d070ff;font-size:12px;font-weight:700">R: ${a.name}</div>
+      <div style="font-size:9px;color:#aaa">${a.action} (${Math.round(a.confidence*100)}%)</div></div>`
+  } else if(g.right&&g.right.animation&&g.right.animation.recording){
+    const a=g.right.animation;
+    rEl.innerHTML=`<div class="gest-panel" style="border-color:#b400dc;padding:4px 6px">
+      <div style="color:#ff3366;font-size:11px;font-weight:700">R: RECORDING</div>
+      <div style="font-size:9px;color:#aaa">${a.frames} frames</div></div>`
+  } else { rEl.innerHTML='<div class="gest-none" style="font-size:10px">R: --</div>' }
+}
+
+function toggleAnimRec(){
+  if(!ws||ws.readyState!==1){toast('Connect first',true);return}
+  if(!animRecording){
+    animRecording=true;
+    document.getElementById('animBtn').textContent='STOP';
+    document.getElementById('animBtn').className='btn rec';
+    document.getElementById('animTeachForm').className='teach-form';
+    const hand=document.getElementById('animHand').value;
+    ws.send(JSON.stringify({type:'anim_record_start',hand:hand}));
+    toast(`Recording animation (${hand}) — perform the motion!`)
+  } else {
+    animRecording=false;
+    document.getElementById('animBtn').textContent='RECORD ANIM';
+    document.getElementById('animBtn').className='btn';
+    document.getElementById('animBtn').style.cssText='flex:1;margin:0;background:rgba(180,0,220,.15);border-color:#b400dc;color:#d070ff';
+    document.getElementById('animTeachForm').className='teach-form open';
+    document.getElementById('animName').focus();
+  }}
+
+function saveAnim(){
+  const name=document.getElementById('animName').value.trim();
+  const action=document.getElementById('animAction').value.trim()||'custom';
+  const hand=document.getElementById('animHand').value;
+  if(!name){toast('Enter a name',true);return}
+  if(ws&&ws.readyState===1)
+    ws.send(JSON.stringify({type:'anim_record_stop',name:name,action:action,hand:hand}));
+  document.getElementById('animName').value='';
+  document.getElementById('animAction').value='';
+  document.getElementById('animTeachForm').className='teach-form';
+  toast(`Learned animation "${name}" (${hand})`);
+  setTimeout(loadAnims,500)}
+
+async function loadAnims(){
+  try{const r=await fetch(`${API}/animations`);const d=await r.json();
+    const el=document.getElementById('animList');
+    let html='';
+    if(d.right_names&&d.right_names.length){
+      html+='<div class="st" style="margin-top:2px;color:#d070ff">Right</div>';
+      html+=d.right_names.map(n=>`<div class="chip" style="border-color:#b400dc">${n} (${d.right[n]||0}) <span class="cx" onclick="delAnim('${n.replace(/'/g,"\\'")}','right')">&times;</span></div>`).join('')}
+    if(d.left_names&&d.left_names.length){
+      html+='<div class="st" style="margin-top:4px;color:#d070ff">Left</div>';
+      html+=d.left_names.map(n=>`<div class="chip" style="border-color:#b400dc">${n} (${d.left[n]||0}) <span class="cx" onclick="delAnim('${n.replace(/'/g,"\\'")}','left')">&times;</span></div>`).join('')}
+    el.innerHTML=html;
+  }catch(e){}}
+
+async function delAnim(name,hand){
+  await fetch(`${API}/animations/remove?name=${encodeURIComponent(name)}&hand=${hand||'right'}`,{method:'POST'});
+  loadAnims();toast(`Removed animation "${name}"`)}
+
+// == Search ==
+function updChips(){const el=document.getElementById('chips');
+  if(!sc.length){el.innerHTML='<div class="em">Not looking for anything yet.</div>';return}
+  el.innerHTML=sc.map(c=>`<span class="chip">${c} <span class="cx" onclick="rmFind('${c.replace(/'/g,"\\'")}')">&times;</span></span>`).join('')}
+
+async function addFind(){const inp=document.getElementById('findIn');const n=inp.value.trim();if(!n)return;inp.value='';
+  try{const r=await fetch(`${API}/search/add?name=${encodeURIComponent(n)}`,{method:'POST'});const d=await r.json();
+    sc=d.classes;updChips();if(d.added)toast(`Looking for "${n}"`);else toast(`Already looking for "${n}"`,true)}catch(e){toast('Error',true)}}
+
+async function rmFind(n){try{const r=await fetch(`${API}/search/remove?name=${encodeURIComponent(n)}`,{method:'POST'});
+  const d=await r.json();sc=d.classes;updChips();toast(`Stopped: "${n}"`)}catch(e){}}
+
+// == Objects ==
+function updObjs(){const el=document.getElementById('objList');
+  if(!dets.length){el.innerHTML='<div class="em">No detections</div>';return}
+  el.innerHTML=dets.map((d,i)=>{const s=i===fi?'sel':'';
+    return`<div class="obj ${s}" onclick="selObj(${i})"><span class="on">${d.class_name}</span><span class="oc">${Math.round(d.confidence*100)}%</span></div>`}).join('')}
+
+function selObj(i){fi=i;const d=dets[i];document.getElementById('fn').textContent=d?d.class_name:'-';fp.classList.add('open');
+  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'focus',index:i}));updObjs()}
+function clrFocus(){fi=null;fp.classList.remove('open');if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'focus',index:-1}));updObjs()}
+function feedClick(ev){const r=img.getBoundingClientRect();const sx=(img.naturalWidth||640)/r.width,sy=(img.naturalHeight||480)/r.height;
+  const cx=(ev.clientX-r.left)*sx,cy=(ev.clientY-r.top)*sy;
+  for(let i=0;i<dets.length;i++){const b=dets[i].bbox;if(cx>=b[0]&&cx<=b[2]&&cy>=b[1]&&cy<=b[3]){selObj(i);return}}clrFocus()}
+
+// == Camera ==
+async function scanCams(){const el=document.getElementById('camList');el.innerHTML='<div class="em">Scanning...</div>';
+  try{const r=await fetch(`${API}/cameras/scan`);const d=await r.json();
+    if(!d.cameras.length){el.innerHTML='<div class="em">No cameras</div>';return}
+    el.innerHTML=d.cameras.map(c=>`<button class="btn" onclick="swCam(${c.index})" style="text-align:left;font-size:10px">${c.label}</button>`).join('')}catch(e){el.innerHTML='<div class="em">Failed</div>'}}
+
+async function swCam(i){try{await fetch(`${API}/adapter/switch/webcam?source=${i}`,{method:'POST'})}catch(e){toast('Failed',true)}}
+
+document.addEventListener('keydown',e=>{if(e.key==='Escape')clrFocus()});
+
+function toggleSB(){
+  const sb=document.getElementById('sidebar'),btn=document.getElementById('sbToggle');
+  sb.classList.toggle('hide');
+  const hidden=sb.classList.contains('hide');
+  btn.classList.toggle('shifted',hidden);
+  btn.innerHTML=hidden?'&#9664;':'&#9654;';
+}
+scanCams();
+fetch(`${API}/search`).then(r=>r.json()).then(d=>{sc=d.classes;updChips()}).catch(()=>{});
+loadGestures();
+loadAnims();
+</script>
+</body>
+</html>

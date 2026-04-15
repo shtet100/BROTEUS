@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BROTEUS — Grasp Intelligence System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#b0ada5;font-family:'DM Sans',sans-serif;overflow:hidden;width:100vw;height:100vh}
+  #cv{position:absolute;inset:0;z-index:0}
+  canvas{display:block}
+  .h{position:absolute;z-index:10;pointer-events:none}
+  .htl{top:20px;left:24px}
+  .htl .sn{font-family:'Outfit',sans-serif;font-weight:900;font-size:24px;letter-spacing:5px;color:#1a1a1e}
+  .htl .ss{font-size:10px;font-weight:500;letter-spacing:1.5px;color:#555;margin-top:2px;text-transform:uppercase}
+  .htl .ob{display:inline-block;margin-top:8px;padding:3px 10px;border:1.5px solid #888;border-radius:3px;font-size:9px;font-weight:600;letter-spacing:2.5px;color:#555}
+  .htr{top:20px;right:24px;text-align:right}
+  .st{font-size:11px;color:#666;margin-bottom:3px;font-weight:500}
+  .st .v{color:#1a1a1e;font-weight:700}
+  .st .g{color:#1a9e55;font-weight:700}
+  .st .a{color:#c4850a;font-weight:700}
+  .st .r{color:#c43a3a;font-weight:700}
+  .hbl{bottom:20px;left:24px}
+  .ip{background:rgba(35,33,30,0.9);border:1.5px solid #555;border-radius:8px;padding:16px 20px;min-width:250px;backdrop-filter:blur(12px);box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+  .ip .lb{font-size:9px;font-weight:600;letter-spacing:2px;color:#999;text-transform:uppercase;margin-bottom:4px}
+  .ip .on{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:#eee;margin-bottom:10px}
+  .ir{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;color:#aaa;font-weight:500}
+  .ir .v{color:#eee;font-weight:700}
+  .sb{margin-top:10px;height:4px;background:#444;border-radius:3px;overflow:hidden}
+  .sf{height:100%;border-radius:3px;transition:width 0.3s;background:linear-gradient(90deg,#c43a3a 0%,#c4850a 40%,#1a9e55 100%)}
+  .hbr{bottom:20px;right:24px;pointer-events:auto}
+  .cs{display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+  .cl{font-size:9px;font-weight:600;letter-spacing:2px;color:#777;text-transform:uppercase;text-align:right;margin-bottom:2px}
+  .cg{display:flex;gap:4px;align-items:center}
+  .b{background:rgba(35,33,30,0.85);border:1.5px solid #666;color:#bbb;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;padding:7px 14px;border-radius:5px;cursor:pointer;transition:all 0.15s;backdrop-filter:blur(8px)}
+  .b:hover{border-color:#eee;color:#eee}
+  .b.on{border-color:#1a9e55;color:#fff;background:rgba(26,158,85,0.3)}
+  .sd{display:inline-block;width:7px;height:7px;border-radius:50%;background:#1a9e55;margin-right:5px;animation:pd 2s ease infinite}
+  @keyframes pd{0%,100%{opacity:1}50%{opacity:0.4}}
+  .lg{position:absolute;top:50%;right:24px;transform:translateY(-50%);z-index:10;pointer-events:none}
+  .li{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:10px;font-weight:600;color:#666}
+  .ld{width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(0,0,0,0.15)}
+  .sr{display:flex;align-items:center;gap:8px;margin-top:2px;pointer-events:auto}
+  .sr input[type=range]{-webkit-appearance:none;width:120px;height:4px;background:#555;border-radius:3px;outline:none}
+  .sr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#1a9e55;cursor:pointer;border:2px solid #333}
+  .sv{font-size:11px;font-weight:700;color:#eee;min-width:30px;text-align:right}
+</style>
+</head>
+<body>
+<div class="h htl"><div class="sn">BROTEUS</div><div class="ss">Grasp Intelligence System v0.1</div><div class="ob">ORION SUBSYSTEM B</div></div>
+<div class="h htr">
+  <div class="st"><span class="sd"></span>PIPELINE <span class="v" id="sP">ACTIVE</span></div>
+  <div class="st">SURFACE POINTS <span class="v" id="sN">0</span></div>
+  <div class="st">OPTIMAL <span class="g" id="sO">0</span></div>
+  <div class="st">ACCEPTABLE <span class="a" id="sA">0</span></div>
+  <div class="st">RISK <span class="r" id="sR">0</span></div>
+  <div class="st" style="margin-top:6px">FPS <span class="v" id="sF">60</span></div>
+</div>
+<div class="lg"><div class="li"><div class="ld" style="background:#1a9e55"></div>OPTIMAL</div><div class="li"><div class="ld" style="background:#d4930d"></div>ACCEPTABLE</div><div class="li"><div class="ld" style="background:#c43a3a"></div>RISK</div></div>
+<div class="h hbl"><div class="ip">
+  <div class="lb">Target Object</div><div class="on" id="dN">WRENCH</div>
+  <div class="ir"><span>Mass</span><span class="v" id="dM">0.32 kg</span></div>
+  <div class="ir"><span>Friction</span><span class="v" id="dFr">0.65</span></div>
+  <div class="ir"><span>Grip Force</span><span class="v" id="dF">2.4 N</span></div>
+  <div class="ir"><span>Confidence</span><span class="v" id="dC">94.2%</span></div>
+  <div class="sb"><div class="sf" id="dB" style="width:94%"></div></div>
+</div></div>
+<div class="h hbr"><div class="cs">
+  <div><div class="cl">Object</div><div class="cg">
+    <button class="b on" data-o="wrench" onclick="swObj('wrench')">WRENCH</button>
+    <button class="b" data-o="mug" onclick="swObj('mug')">MUG</button>
+    <button class="b" data-o="sphere" onclick="swObj('sphere')">SPHERE</button>
+  </div></div>
+  <div><div class="cl">Contact Density</div><div class="sr">
+    <input type="range" id="ds" min="50" max="800" value="300" oninput="onDens(this.value)">
+    <span class="sv" id="dv">300</span>
+  </div></div>
+  <div><div class="cl">View</div><div class="cg">
+    <button class="b on" id="bG" onclick="togGrid()">CONTACTS</button>
+    <button class="b" id="bN" onclick="togNorm()">NORMALS</button>
+    <button class="b" onclick="doGrasp()" id="bGr">GRASP</button>
+  </div></div>
+</div></div>
+<div id="cv"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════
+// BROTEUS v7 — Correct opposing grip mechanics
+// 
+// ARCHITECTURE:
+// - Palm is horizontal (XZ plane), bottom faces -Y
+// - 4 fingers at FRONT of palm (z = -0.03), hang in -Y
+//   Curl: POSITIVE X rotation → tips swing toward +Z (under palm, inward)
+// - Thumb at BACK of palm (z = +0.015), hangs in -Y
+//   Curl: NEGATIVE X rotation → tips swing toward -Z (opposing fingers)
+// - NO compound base rotations. Pure X-axis curl only.
+// - This creates a real opposing pincer grip.
+// ═══════════════════════════════════════════════════════════════
+
+const cv=document.getElementById('cv');
+const sc=new THREE.Scene();sc.background=new THREE.Color(0xb0ada5);
+const cam=new THREE.PerspectiveCamera(42,innerWidth/innerHeight,0.01,100);
+const rn=new THREE.WebGLRenderer({antialias:true});
+rn.setSize(innerWidth,innerHeight);rn.setPixelRatio(Math.min(devicePixelRatio,2));
+rn.shadowMap.enabled=true;rn.shadowMap.type=THREE.PCFSoftShadowMap;
+rn.toneMapping=THREE.ACESFilmicToneMapping;rn.toneMappingExposure=1.3;
+rn.outputEncoding=THREE.sRGBEncoding;cv.appendChild(rn.domElement);
+
+sc.add(new THREE.AmbientLight(0xccc8c0,0.55));
+const su=new THREE.DirectionalLight(0xfff8f0,0.85);
+su.position.set(2.5,5,3);su.castShadow=true;su.shadow.mapSize.set(2048,2048);
+su.shadow.camera.near=0.1;su.shadow.camera.far=15;
+su.shadow.camera.left=-2;su.shadow.camera.right=2;su.shadow.camera.top=2;su.shadow.camera.bottom=-2;
+su.shadow.bias=-0.0008;sc.add(su);
+const fl=new THREE.DirectionalLight(0xb0c0e0,0.3);fl.position.set(-3,2,-1);sc.add(fl);
+
+// Ground + table
+const gm=new THREE.Mesh(new THREE.PlaneGeometry(12,12),new THREE.MeshStandardMaterial({color:0xa8a49c,roughness:0.95}));
+gm.rotation.x=-Math.PI/2;gm.receiveShadow=true;sc.add(gm);
+const gh=new THREE.GridHelper(4,20,0x9a968e,0xa09c94);gh.material.opacity=0.25;gh.material.transparent=true;gh.position.y=0.001;sc.add(gh);
+
+const TY=0.32;
+const tt=new THREE.Mesh(new THREE.BoxGeometry(1,0.035,0.6),new THREE.MeshStandardMaterial({color:0xd8d4cc,roughness:0.35,metalness:0.02}));
+tt.position.y=TY-0.0175;tt.castShadow=true;tt.receiveShadow=true;sc.add(tt);
+[[-0.44,-0.24],[0.44,-0.24],[-0.44,0.24],[0.44,0.24]].forEach(([x,z])=>{
+  const l=new THREE.Mesh(new THREE.CylinderGeometry(0.014,0.014,TY-0.035,8),new THREE.MeshStandardMaterial({color:0xc0bcb4,roughness:0.5}));
+  l.position.set(x,(TY-0.035)/2,z);l.castShadow=true;sc.add(l);
+});
+
+// ═══ OBJECTS ═══════════════════════════════════════════════
+const oMat=new THREE.MeshStandardMaterial({color:0x6a6a78,roughness:0.3,metalness:0.6});
+function mkWrench(){
+  const g=new THREE.Group();
+  const h=new THREE.Mesh(new THREE.CylinderGeometry(0.017,0.015,0.30,20),oMat.clone());
+  h.rotation.z=Math.PI/2;h.position.y=0.017;h.castShadow=true;g.add(h);
+  const c1=new THREE.Mesh(new THREE.SphereGeometry(0.017,12,12),oMat.clone());c1.position.set(-0.15,0.017,0);c1.castShadow=true;g.add(c1);
+  const c2=new THREE.Mesh(new THREE.SphereGeometry(0.015,12,12),oMat.clone());c2.position.set(0.15,0.017,0);c2.castShadow=true;g.add(c2);
+  const hd=new THREE.Mesh(new THREE.TorusGeometry(0.035,0.013,10,20,Math.PI*1.4),oMat.clone());
+  hd.position.set(0.16,0.017,0);hd.rotation.x=Math.PI/2;hd.rotation.z=0.3;hd.castShadow=true;g.add(hd);
+  const bx=new THREE.Mesh(new THREE.TorusGeometry(0.028,0.011,10,20),oMat.clone());
+  bx.position.set(-0.15,0.017,0);bx.rotation.x=Math.PI/2;bx.castShadow=true;g.add(bx);
+  return g;
+}
+function mkMug(){
+  const g=new THREE.Group();
+  const b=new THREE.Mesh(new THREE.CylinderGeometry(0.038,0.035,0.085,24),oMat.clone());
+  b.position.y=0.0425;b.castShadow=true;g.add(b);
+  const hl=new THREE.Mesh(new THREE.TorusGeometry(0.025,0.005,8,16,Math.PI),oMat.clone());
+  hl.position.set(0.040,0.048,0);hl.rotation.y=Math.PI/2;hl.castShadow=true;g.add(hl);
+  return g;
+}
+function mkSphere(){
+  const g=new THREE.Group();
+  const s=new THREE.Mesh(new THREE.SphereGeometry(0.045,32,24),oMat.clone());
+  s.position.y=0.045;s.castShadow=true;g.add(s);
+  return g;
+}
+
+const objs={wrench:mkWrench(),mug:mkMug(),sphere:mkSphere()};
+let cur='wrench',dens=300;
+const oG=new THREE.Group();oG.position.set(0,TY,0);sc.add(oG);oG.add(objs.wrench);
+const oi={wrench:{n:'WRENCH',m:'0.32 kg',f:'0.65',fo:'2.4 N'},mug:{n:'MUG',m:'0.28 kg',f:'0.55',fo:'1.8 N'},sphere:{n:'SPHERE',m:'0.15 kg',f:'0.70',fo:'1.2 N'}};
+
+function objBB(){sc.updateMatrixWorld(true);return new THREE.Box3().setFromObject(objs[cur]);}
+function objMeshes(){const m=[];objs[cur].traverse(c=>{if(c.isMesh)m.push(c);});return m;}
+
+// ═══ SURFACE SAMPLING ══════════════════════════════════════
+const gG=new THREE.Group();oG.add(gG);
+const nG=new THREE.Group();oG.add(nG);
+let gV=true,nV=false;
+
+function samSurf(mesh,cnt,ri){
+  const geo=mesh.geometry;geo.computeVertexNormals();
+  const pos=geo.attributes.position,nrm=geo.attributes.normal,idx=geo.index;
+  const toR=new THREE.Matrix4().copy(ri).multiply(mesh.matrixWorld);
+  const nM=new THREE.Matrix3().getNormalMatrix(toR);
+  const tris=[];let tA=0;
+  const vA=new THREE.Vector3(),vB=new THREE.Vector3(),vC=new THREE.Vector3();
+  const nA=new THREE.Vector3(),nB=new THREE.Vector3(),nC=new THREE.Vector3();
+  const e1=new THREE.Vector3(),e2=new THREE.Vector3(),cr=new THREE.Vector3();
+  const tc=idx?idx.count/3:pos.count/3;
+  for(let i=0;i<tc;i++){
+    let a,b,c;if(idx){a=idx.getX(i*3);b=idx.getX(i*3+1);c=idx.getX(i*3+2);}else{a=i*3;b=i*3+1;c=i*3+2;}
+    vA.fromBufferAttribute(pos,a).applyMatrix4(toR);vB.fromBufferAttribute(pos,b).applyMatrix4(toR);vC.fromBufferAttribute(pos,c).applyMatrix4(toR);
+    nA.fromBufferAttribute(nrm,a).applyMatrix3(nM).normalize();nB.fromBufferAttribute(nrm,b).applyMatrix3(nM).normalize();nC.fromBufferAttribute(nrm,c).applyMatrix3(nM).normalize();
+    e1.subVectors(vB,vA);e2.subVectors(vC,vA);cr.crossVectors(e1,e2);
+    const ar=cr.length()*0.5;if(ar<1e-8)continue;tA+=ar;
+    tris.push({a:vA.clone(),b:vB.clone(),c:vC.clone(),nA:nA.clone(),nB:nB.clone(),nC:nC.clone(),ar});
+  }
+  if(!tris.length)return[];const pts=[];
+  for(let i=0;i<cnt;i++){
+    let r=Math.random()*tA,t=tris[0];for(const tr of tris){r-=tr.ar;if(r<=0){t=tr;break;}}
+    let u=Math.random(),v=Math.random();if(u+v>1){u=1-u;v=1-v;}const w=1-u-v;
+    pts.push({p:new THREE.Vector3(t.a.x*w+t.b.x*u+t.c.x*v,t.a.y*w+t.b.y*u+t.c.y*v,t.a.z*w+t.b.z*u+t.c.z*v),
+      n:new THREE.Vector3(t.nA.x*w+t.nB.x*u+t.nC.x*v,t.nA.y*w+t.nB.y*u+t.nC.y*v,t.nA.z*w+t.nB.z*u+t.nC.z*v).normalize()});
+  }return pts;
+}
+function samAll(grp,tot){
+  sc.updateMatrixWorld(true);const ri=new THREE.Matrix4().copy(oG.matrixWorld).invert();
+  let all=[],ms=[];grp.traverse(c=>{if(c.isMesh)ms.push(c);});
+  if(!ms.length)return[];const per=Math.ceil(tot/ms.length);
+  ms.forEach(m=>{all=all.concat(samSurf(m,per,ri));});return all;
+}
+function scorePt(pt,ot){
+  const p=pt.p,n=pt.n,lat=Math.sqrt(n.x*n.x+n.z*n.z),uA=Math.abs(n.y);
+  let s=lat*0.5+(1-uA)*0.25+Math.random()*0.15;
+  if(ot==='wrench')s=s*0.4+(1-Math.min(1,Math.abs(p.x)/0.12))*0.6;
+  else if(ot==='mug'){const h=p.y/0.085;if(h>0.2&&h<0.8)s+=0.12;if(p.x>0.02)s+=0.08;}
+  else if(ot==='sphere')s=s*0.35+(1-Math.min(1,Math.abs(p.y-0.045)/0.045))*0.65;
+  return Math.max(0,Math.min(1,s));
+}
+function genGrid(ot,d){
+  while(gG.children.length){const c=gG.children[0];gG.remove(c);c.geometry?.dispose();c.material?.dispose();}
+  while(nG.children.length){const c=nG.children[0];nG.remove(c);c.geometry?.dispose();c.material?.dispose();}
+  const pts=samAll(objs[ot],d||dens);const dg=new THREE.SphereGeometry(0.003,6,6);
+  let op=0,ac=0,rk=0;
+  for(const pt of pts){
+    const s=scorePt(pt,ot);let co;
+    if(s>=0.60){co=0x1a9e55;op++;}else if(s>=0.35){co=0xd4930d;ac++;}else{co=0xc43a3a;rk++;}
+    const m=new THREE.MeshBasicMaterial({color:co,transparent:true,opacity:0.55+s*0.4});
+    const dot=new THREE.Mesh(dg,m);dot.position.copy(pt.p);
+    dot.userData={s,bo:0.55+s*0.4,ph:Math.random()*6.28};gG.add(dot);
+    nG.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([pt.p.clone(),pt.p.clone().add(pt.n.clone().multiplyScalar(0.012))]),new THREE.LineBasicMaterial({color:co,transparent:true,opacity:0.35})));
+  }
+  nG.visible=nV;gG.visible=gV;
+  document.getElementById('sN').textContent=pts.length;
+  document.getElementById('sO').textContent=op;
+  document.getElementById('sA').textContent=ac;
+  document.getElementById('sR').textContent=rk;
+  const tot=pts.length||1,oR=op/tot;
+  const conf=Math.min(99.5,oR*70+Math.min(1,tot/500)*15+Math.min(1,tot/200)*10+10);
+  document.getElementById('dC').textContent=conf.toFixed(1)+'%';
+  document.getElementById('dB').style.width=conf.toFixed(1)+'%';
+}
+rn.render(sc,cam);genGrid('wrench',dens);
+function onDens(v){dens=parseInt(v);document.getElementById('dv').textContent=v;if(gs==='idle'){rn.render(sc,cam);genGrid(cur,dens);}}
+
+// ═══════════════════════════════════════════════════════════════
+// HAND — correct opposing grip
+//
+// All segments extend in -Y from their parent joint.
+// Rotation is ONLY around the local X axis.
+// Math: positive X rotation of -Y vector → tip goes toward -Z
+//       negative X rotation of -Y vector → tip goes toward +Z
+//
+// 4 fingers at FRONT (z≈-0.03): dir=-1 → negative X rot → curl toward +Z (inward) ✓
+// Thumb at BACK (z≈+0.02):      dir=+1 → positive X rot → curl toward -Z (opposing) ✓
+// ═══════════════════════════════════════════════════════════════
+
+const hG=new THREE.Group();sc.add(hG);
+const skM=new THREE.MeshStandardMaterial({color:0xd4b8a0,roughness:0.55,metalness:0.02});
+const skD=new THREE.MeshStandardMaterial({color:0xc8aa90,roughness:0.5,metalness:0.04});
+const nlM=new THREE.MeshStandardMaterial({color:0xf0ddd0,roughness:0.3,metalness:0.05});
+
+const pG=new THREE.Group();hG.add(pG);
+
+// Palm
+const pb=new THREE.Mesh(new THREE.BoxGeometry(0.082,0.016,0.065),skM.clone());pb.castShadow=true;pG.add(pb);
+const pp=new THREE.Mesh(new THREE.BoxGeometry(0.075,0.008,0.058),skM.clone());pp.position.y=-0.011;pp.castShadow=true;pG.add(pp);
+// Knuckle ridge at front edge
+[0.030,0.012,-0.008,-0.028].forEach(x=>{
+  const k=new THREE.Mesh(new THREE.SphereGeometry(0.007,6,6),skD);k.position.set(x,-0.005,-0.032);pG.add(k);
+});
+// Thumb mount at back
+const tb=new THREE.Mesh(new THREE.SphereGeometry(0.012,8,8),skM.clone());tb.position.set(0.035,-0.005,0.028);pG.add(tb);
+
+// Phalange builder — used for all finger segments
+function mkPh(len,rT,rB,isTip){
+  const g=new THREE.Group();
+  const geo=new THREE.CylinderGeometry(rT,rB,len,10);
+  geo.translate(0,-len/2,0); // extends downward from joint
+  const m=new THREE.Mesh(geo,skM.clone());m.castShadow=true;g.add(m);
+  const kn=new THREE.Mesh(new THREE.SphereGeometry(Math.max(rT,rB)*1.1,8,8),skD);g.add(kn);
+  if(isTip){
+    const tp=new THREE.Mesh(new THREE.SphereGeometry(rB*0.9,8,8),skM.clone());tp.position.y=-len;g.add(tp);
+    const nl=new THREE.Mesh(new THREE.BoxGeometry(rT*1.5,rT*1.2,rT*0.3),nlM);
+    nl.position.set(0,-len+rT*0.3,-rT*0.8);g.add(nl);
+  }
+  return g;
+}
+
+// Finger defs — ALL use X-axis rotation, sign determines direction
+// +1 = curl toward +Z (four fingers from front)
+// -1 = curl toward -Z (thumb from back, opposing)
+const fD=[
+  // THUMB: at back of palm (z=+0.020), curls toward -Z (toward center)
+  // Positive X rot sends -Y toward -Z ✓
+  {nm:'thumb', base:[0.035,-0.012,0.020],
+   sg:[[0.025,0.007,0.0065],[0.020,0.0065,0.006]],
+   rest:[0.08,0.05], full:[0.65,0.80], tip:[false,true], dir:1},
+  // INDEX: at front of palm (z=-0.032), curls toward +Z (toward center)
+  // Negative X rot sends -Y toward +Z ✓
+  {nm:'index', base:[0.030,-0.012,-0.032],
+   sg:[[0.028,0.006,0.0055],[0.023,0.0055,0.005],[0.017,0.005,0.0045]],
+   rest:[0.04,0.03,0.02], full:[1.05,1.25,0.95], tip:[false,false,true], dir:-1},
+  // MIDDLE
+  {nm:'middle', base:[0.008,-0.012,-0.034],
+   sg:[[0.031,0.006,0.0055],[0.026,0.0055,0.005],[0.019,0.005,0.0045]],
+   rest:[0.03,0.02,0.01], full:[1.10,1.30,1.00], tip:[false,false,true], dir:-1},
+  // RING
+  {nm:'ring', base:[-0.014,-0.012,-0.032],
+   sg:[[0.028,0.0058,0.0052],[0.023,0.0052,0.0048],[0.017,0.0048,0.004]],
+   rest:[0.04,0.03,0.02], full:[1.05,1.25,0.95], tip:[false,false,true], dir:-1},
+  // PINKY
+  {nm:'pinky', base:[-0.034,-0.012,-0.028],
+   sg:[[0.023,0.005,0.0045],[0.018,0.0045,0.004],[0.014,0.004,0.0035]],
+   rest:[0.05,0.04,0.03], full:[1.00,1.20,0.90], tip:[false,false,true], dir:-1},
+];
+
+const fingers=[];
+const fLim=[1,1,1,1,1]; // per-finger curl limit
+
+fD.forEach((d,fi)=>{
+  const fd={nm:d.nm,joints:[],tipM:null};
+  let prev=null;
+  d.sg.forEach(([len,rT,rB],i)=>{
+    const j=new THREE.Group();
+    if(i===0){
+      j.position.set(d.base[0],d.base[1],d.base[2]);
+      // NO base rotations — pure position only
+      pG.add(j);
+    }else{
+      j.position.y=-prev.userData.len;
+      prev.add(j);
+    }
+    j.add(mkPh(len,rT,rB,d.tip[i]));
+    j.userData={len,rest:d.rest[i],full:d.full[i],dir:d.dir};
+    fd.joints.push(j);
+    prev=j;
+  });
+  const tm=new THREE.Object3D();tm.position.y=-prev.userData.len;prev.add(tm);
+  fd.tipM=tm;
+  fingers.push(fd);
+});
+
+function setPose(t){
+  const c=Math.max(-0.1,Math.min(1,t));
+  fingers.forEach((f,fi)=>{
+    const lim=fLim[fi];
+    const cl=Math.min(c,lim);
+    f.joints.forEach(j=>{
+      const ang=j.userData.rest+(j.userData.full-j.userData.rest)*cl;
+      // ALL fingers use X rotation. Direction (dir) determines curl direction.
+      j.rotation.x=ang*j.userData.dir;
+    });
+  });
+}
+setPose(0);
+
+// ═══ COLLISION — dynamic bbox from mesh ════════════════════
+// Collision: proper point-in-mesh test using ray parity.
+// Cast a ray from fingertip straight up. Count mesh intersections
+// with DoubleSide enabled. Odd count = inside, even = outside.
+// This is the gold-standard algorithm for point-in-solid testing.
+const colRay=new THREE.Raycaster();
+const UP=new THREE.Vector3(0,1,0);
+
+function tipInside(wp){
+  colRay.set(wp,UP);
+  colRay.near=0;colRay.far=2;
+  
+  // Temporarily enable DoubleSide so we count both entry and exit faces
+  const meshes=objMeshes();
+  const origSides=meshes.map(m=>m.material.side);
+  meshes.forEach(m=>{m.material.side=THREE.DoubleSide;});
+  
+  const hits=colRay.intersectObjects(meshes,false);
+  
+  // Restore original material sides
+  meshes.forEach((m,i)=>{m.material.side=origSides[i];});
+  
+  // Odd intersection count = point is inside the mesh
+  // Also treat "very close to surface" as inside (within 3mm margin)
+  if(hits.length%2===1) return true;
+  
+  // Additional proximity check: cast toward object center
+  // If surface is very close, treat as contact
+  const center=new THREE.Vector3();objBB().getCenter(center);
+  const toCenter=new THREE.Vector3().subVectors(center,wp);
+  const dist=toCenter.length();
+  if(dist<0.001)return true;
+  toCenter.normalize();
+  colRay.set(wp,toCenter);colRay.far=dist+0.05;
+  
+  meshes.forEach(m=>{m.material.side=THREE.DoubleSide;});
+  const hits2=colRay.intersectObjects(meshes,false);
+  meshes.forEach((m,i)=>{m.material.side=origSides[i];});
+  
+  // If nearest surface is within 3mm, fingertip is at contact
+  if(hits2.length>0 && hits2[0].distance<0.004) return true;
+  
+  return false;
+}
+
+function fingerPenetrates(f){
+  sc.updateMatrixWorld(true);
+  // Check fingertip
+  const tw=new THREE.Vector3();f.tipM.getWorldPosition(tw);
+  if(tipInside(tw)) return true;
+  // Check mid-segment of last phalange
+  const lastJ=f.joints[f.joints.length-1];
+  const jw=new THREE.Vector3();lastJ.getWorldPosition(jw);
+  const mid=new THREE.Vector3().lerpVectors(jw,tw,0.5);
+  if(tipInside(mid)) return true;
+  // Check quarter point too for long segments
+  const q=new THREE.Vector3().lerpVectors(jw,tw,0.75);
+  if(tipInside(q)) return true;
+  return false;
+}
+
+function updateCol(target){
+  sc.updateMatrixWorld(true);
+  fingers.forEach((f,fi)=>{
+    let lo=0,hi=target,best=target;
+    for(let it=0;it<14;it++){
+      const mid=(lo+hi)/2;
+      f.joints.forEach(j=>{
+        const ang=j.userData.rest+(j.userData.full-j.userData.rest)*mid;
+        j.rotation.x=ang*j.userData.dir;
+      });
+      sc.updateMatrixWorld(true);
+      if(fingerPenetrates(f)){best=mid;hi=mid;}else{lo=mid;}
+    }
+    fLim[fi]=best;
+  });
+}
+
+// ═══ GRASP ═════════════════════════════════════════════════
+const HOVER=TY+0.32;
+hG.position.set(0,HOVER,0);
+
+function palmTgt(){const bb=objBB();return bb.max.y+0.022;}
+
+const LIFT=0.12;
+let gs='idle',gt=0,curl=0;
+let cachedTY=0; // cached palm target at grasp start — doesn't change during lift
+let lockedCurl=0; // curl value locked after close phase
+const SP=0.006;
+function eIO(t){return t<0.5?2*t*t:1-Math.pow(-2*t+2,2)/2;}
+
+function doGrasp(){
+  if(gs!=='idle')return;gs='descend';gt=0;curl=0;fLim.fill(1);
+  cachedTY=palmTgt(); // cache ONCE before anything moves
+  document.getElementById('sP').textContent='GRASPING';
+  document.getElementById('bGr').classList.add('on');
+}
+
+function updGrasp(){
+  if(gs==='idle')return;
+  gt+=SP;
+  const tY=cachedTY; // use cached value throughout entire grasp
+
+  if(gs==='descend'){
+    const t=Math.min(gt,1),e=eIO(t);
+    hG.position.y=HOVER+(tY-HOVER)*e;
+    curl=t<0.3?-0.05:-0.05+(t-0.3)/0.7*0.25;
+    setPose(curl);
+    if(t>=1){gs='close';gt=0;}
+  }else if(gs==='close'){
+    const t=Math.min(gt*0.6,1);
+    curl=0.2+t*0.8;
+    updateCol(curl);setPose(curl);
+    if(t>=1){
+      // LOCK the curl and limits — fingers stay exactly where they are
+      lockedCurl=curl;
+      gs='lift';gt=0;
+    }
+  }else if(gs==='lift'){
+    const t=Math.min(gt,1),e=eIO(t);
+    // Move hand and object by IDENTICAL delta from their positions at end of close
+    const liftDelta=LIFT*e;
+    hG.position.y=tY+liftDelta;
+    oG.position.y=TY+liftDelta;
+    // Keep fingers locked
+    setPose(lockedCurl);
+    if(t>=1){gs='hold';gt=0;}
+  }else if(gs==='hold'){
+    // Everything stays locked
+    hG.position.y=tY+LIFT;
+    oG.position.y=TY+LIFT;
+    setPose(lockedCurl);
+    if(gt>0.8){gs='lower';gt=0;}
+  }else if(gs==='lower'){
+    const t=Math.min(gt,1),e=eIO(t);
+    const liftDelta=LIFT*(1-e);
+    hG.position.y=tY+liftDelta;
+    oG.position.y=TY+liftDelta;
+    setPose(lockedCurl);
+    if(t>=1){gs='release';gt=0;}
+  }else if(gs==='release'){
+    const t=Math.min(gt*1.2,1);
+    curl=lockedCurl*(1-t);fLim.fill(1);setPose(curl);
+    oG.position.y=TY; // snap object back to table
+    if(t>=1){gs='retract';gt=0;}
+  }else if(gs==='retract'){
+    const t=Math.min(gt,1),e=eIO(t);
+    hG.position.y=tY+(HOVER-tY)*e;
+    if(t>=1){gs='idle';gt=0;curl=0;setPose(0);
+      document.getElementById('sP').textContent='ACTIVE';
+      document.getElementById('bGr').classList.remove('on');
+    }
+  }
+}
+
+// ═══ CAMERA ════════════════════════════════════════════════
+let iD=false,pM={x:0,y:0},cA=0.7,cH=0.8,cDi=1.3;
+const cT=new THREE.Vector3(0,TY+0.05,0);
+rn.domElement.addEventListener('mousedown',e=>{iD=true;pM={x:e.clientX,y:e.clientY};});
+rn.domElement.addEventListener('mousemove',e=>{if(!iD)return;cA+=(e.clientX-pM.x)*0.006;cH=Math.max(0.2,Math.min(2.5,cH-(e.clientY-pM.y)*0.005));pM={x:e.clientX,y:e.clientY};});
+rn.domElement.addEventListener('mouseup',()=>iD=false);rn.domElement.addEventListener('mouseleave',()=>iD=false);
+rn.domElement.addEventListener('wheel',e=>{cDi=Math.max(0.4,Math.min(4,cDi+e.deltaY*0.002));});
+rn.domElement.addEventListener('touchstart',e=>{iD=true;pM={x:e.touches[0].clientX,y:e.touches[0].clientY};});
+rn.domElement.addEventListener('touchmove',e=>{e.preventDefault();if(!iD)return;cA+=(e.touches[0].clientX-pM.x)*0.006;cH=Math.max(0.2,Math.min(2.5,cH-(e.touches[0].clientY-pM.y)*0.005));pM={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
+rn.domElement.addEventListener('touchend',()=>iD=false);
+
+function swObj(type){
+  if(gs!=='idle')return;oG.remove(objs[cur]);cur=type;oG.add(objs[type]);
+  oG.position.y=TY;hG.position.y=HOVER;curl=0;fLim.fill(1);setPose(0);
+  rn.render(sc,cam);genGrid(type,dens);
+  const d=oi[type];
+  document.getElementById('dN').textContent=d.n;
+  document.getElementById('dM').textContent=d.m;
+  document.getElementById('dFr').textContent=d.f;
+  document.getElementById('dF').textContent=d.fo;
+  document.querySelectorAll('[data-o]').forEach(b=>b.classList.remove('on'));
+  document.querySelector(`[data-o="${type}"]`).classList.add('on');
+}
+function togGrid(){gV=!gV;gG.visible=gV;document.getElementById('bG').classList.toggle('on');}
+function togNorm(){nV=!nV;nG.visible=nV;document.getElementById('bN').classList.toggle('on');}
+
+// ═══ LOOP ══════════════════════════════════════════════════
+const clk=new THREE.Clock();let fc=0,lf=0;
+function anim(){
+  requestAnimationFrame(anim);const t=clk.getElapsedTime();
+  if(!iD)cA+=0.0008;
+  cam.position.set(Math.cos(cA)*cDi,cH,Math.sin(cA)*cDi);cam.lookAt(cT);
+  gG.children.forEach(d=>{if(!d.userData?.bo)return;d.material.opacity=d.userData.bo*(Math.sin(t*2.5+d.userData.ph)*0.12+0.88);});
+  if(gs==='idle')hG.position.y=HOVER+Math.sin(t*1.2)*0.004;
+  updGrasp();
+  fc++;if(t-lf>0.5){document.getElementById('sF').textContent=Math.round(fc/(t-lf));fc=0;lf=t;}
+  rn.render(sc,cam);
+}
+anim();
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();rn.setSize(innerWidth,innerHeight);});
+</script>
+</body>
+</html>
