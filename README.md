@@ -24,7 +24,7 @@ That's the short version. Here's the longer one.
 
 <div align="center">
 
-https://github.com/user-attachments/assets/PLACEHOLDER_OBJECT_DETECTION
+https://github.com/user-attachments/assets/36bcba2e-5a44-4781-a02c-d8595c81ea91
 
 </div>
 
@@ -42,7 +42,7 @@ Why this matters: most detection systems have a hardcoded vocabulary baked into 
 
 <div align="center">
 
-https://github.com/user-attachments/assets/PLACEHOLDER_GESTURE_RECOGNITION
+https://github.com/user-attachments/assets/6b350a3f-31fd-4277-9c1b-d692c2b9d260
 
 </div>
 
@@ -74,7 +74,7 @@ On classification, learned gestures always win over geometric rules. Cosine simi
 
 <div align="center">
 
-https://github.com/user-attachments/assets/PLACEHOLDER_ANIMATION_DETECTION
+https://github.com/user-attachments/assets/295dcfd5-870a-42b1-9d6e-d345dccdb10f
 
 </div>
 
