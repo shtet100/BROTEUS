@@ -2,8 +2,6 @@
 
 **Biometric Recognition & Object-Tracking Engagement with Universal Sensing**
 
-ORION Subsystem B. Perception & Grasp Intelligence.
-
 ---
 
 BROTEUS is a real-time vision system that detects objects, tracks hands, recognizes gestures, and understands hand animations, all running simultaneously in a single pipeline. It serves as the perception layer of [ORION](https://github.com/shtet100), a modular robotics ecosystem designed to control a physical robot arm.
@@ -119,12 +117,12 @@ Depth data comes from **MiDaS** monocular estimation. One RGB camera, no depth s
 ```
 ┌──────────────────────────────────────────────────────┐
 │                   BROTEUS Server                     │
-│                 FastAPI · Port 8100                   │
+│                 FastAPI · Port 8100                  │
 │                                                      │
-│  ┌────────────┐  ┌──────────────┐  ┌────────────┐   │
-│  │ YOLO-World │  │  MediaPipe   │  │   MiDaS    │   │
-│  │ Detection  │  │  Dual Hands  │  │   Depth    │   │
-│  └─────┬──────┘  └──────┬───────┘  └─────┬──────┘   │
+│  ┌────────────┐  ┌──────────────┐  ┌────────────┐    │
+│  │ YOLO-World │  │  MediaPipe   │  │   MiDaS    │    │
+│  │ Detection  │  │  Dual Hands  │  │   Depth    │    │
+│  └─────┬──────┘  └──────┬───────┘  └─────┬──────┘    │
 │        │         ┌──────┴───────┐         │          │
 │        │         │ Gesture 35D  │         │          │
 │        │         │ Anim 12D+DTW │         │          │
@@ -144,8 +142,8 @@ Depth data comes from **MiDaS** monocular estimation. One RGB camera, no depth s
                    WebSocket / JSON
                          │
 ┌────────────────────────▼─────────────────────────────┐
-│                  Live Dashboard                       │
-│               Browser · localhost:8100                │
+│                  Live Dashboard                      │
+│               Browser · localhost:8100               │
 └──────────────────────────────────────────────────────┘
 ```
 
