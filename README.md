@@ -2,21 +2,19 @@
 
 **Biometric Recognition & Object-Tracking Engagement with Universal Sensing**
 
-ORION Subsystem B — the perception layer.
+ORION Subsystem B. Perception & Grasp Intelligence.
 
 ---
 
-BROTEUS is a real-time vision system that detects objects, tracks hands, recognizes gestures, and understands hand animations — all running at once in a single pipeline. It's the eyes of [ORION](https://github.com/shtet100), a modular robotics ecosystem we're building to eventually control a physical robot arm.
+BROTEUS is a real-time vision system that detects objects, tracks hands, recognizes gestures, and understands hand animations, all running simultaneously in a single pipeline. It serves as the perception layer of [ORION](https://github.com/shtet100), a modular robotics ecosystem designed to control a physical robot arm.
 
-The whole thing runs on CPU at ~21 FPS. No GPU needed.
+The entire system runs on CPU at ~21 FPS. No GPU required.
 
 ---
 
-## What It Actually Does
+## What It Does
 
-You point a camera at a desk. You type "pen" into the search bar. BROTEUS finds the pen. You type "sticky note" — now it's tracking both. Hold up your hand and it draws a skeleton, tells you which gesture you're making, and maps it to a robot command. Wave your hand and it recognizes the motion pattern. Click on a detected object and it shows you where a gripper should grab it.
-
-That's the short version. Here's the longer one.
+A camera feed is processed through four parallel subsystems: YOLO-World finds objects that the operator has specified, MediaPipe tracks both hands with full 3D skeleton data, a learning-first classifier identifies static hand gestures, and a DTW-based recognizer detects temporal hand animations. Clicking on a detected object triggers a grasp affordance heatmap showing optimal contact surfaces.
 
 ---
 
@@ -26,15 +24,19 @@ That's the short version. Here's the longer one.
 
 https://github.com/user-attachments/assets/36bcba2e-5a44-4781-a02c-d8595c81ea91
 
+*Real-time object detection with user-driven search list. Classes are added and removed on the fly.*
+
 </div>
 
-We use **YOLO-World** — an open-vocabulary detector. Traditional YOLO only knows 80 object classes. YOLO-World takes text queries, so you can tell it to find literally anything.
+BROTEUS uses **YOLO-World**, an open-vocabulary detection model. Traditional YOLO is locked to 80 COCO classes. YOLO-World accepts arbitrary text queries at runtime.
 
-BROTEUS starts blind. Zero classes. You add what you want through the UI, and it starts looking. Remove it with one click. The list saves to disk, so it remembers across restarts.
+The system starts with zero classes. The operator adds object names through the UI, and BROTEUS begins searching for them. Removing a class is a single click. The search list persists to disk across restarts.
 
-Why this matters: most detection systems have a hardcoded vocabulary baked into training. Ours doesn't. The user decides what exists in the scene.
+This matters because most detection systems have a hardcoded vocabulary baked into training. BROTEUS has none. The operator decides what exists in the scene.
 
-**Numbers:** 79–87% confidence on common desk objects, 21 FPS on CPU, detection every 5th frame with an IoU tracker filling the gaps. The tracker keeps persistent IDs so objects don't flicker when the detector skips a frame.
+**Performance:** 79-87% confidence on common desk objects, 21 FPS on CPU, detection every 5th frame with an IoU tracker filling the gaps. The tracker maintains persistent IDs so objects don't flicker when the detector skips a frame.
+
+The detection backbone is designed as a swappable module, structured for future drop-in of NVIDIA Isaac ROS (RT-DETR, FoundationPose) when GPU hardware becomes available.
 
 ---
 
@@ -44,29 +46,36 @@ Why this matters: most detection systems have a hardcoded vocabulary baked into 
 
 https://github.com/user-attachments/assets/6b350a3f-31fd-4277-9c1b-d692c2b9d260
 
+*Dual-hand gesture recognition with independent left/right tracking. Each hand displays its gesture, action, confidence, and finger states in real-time.*
+
 </div>
 
-We track up to two hands at once using MediaPipe's HandLandmarker (21 3D keypoints per hand). Left and right are identified and tracked independently — separate classifiers, separate memory, separate everything.
+BROTEUS tracks up to two hands simultaneously using MediaPipe's HandLandmarker (21 3D keypoints per hand). Left and right hands are identified and tracked independently with separate classifiers, separate memory, and separate state.
 
 ### The Feature Vector
 
-Each hand pose gets compressed into a **35-dimensional vector**:
+Each hand pose is compressed into a **35-dimensional vector**:
 
-- **5** finger curl angles (3D joint angles, not just "up or down")
+- **5** finger curl angles (3D joint angles, not binary up/down)
 - **5** fingertip-to-palm distances
 - **10** inter-fingertip distances (every pair)
-- **5** z-depth ratios (catches gestures pointing toward/away from camera)
+- **5** z-depth ratios (captures gestures pointing toward or away from the camera)
 - **4** thumb-to-finger proximities (pinch detection)
-- **3** palm normal (which way the palm faces — this is what makes rotation work)
-- **3** palm direction (which way the fingers point)
+- **3** palm normal (encodes which direction the palm faces, enabling rotation invariance)
+- **3** palm direction (encodes which direction the fingers point)
 
-The palm orientation features are what separate this from the typical "is the finger up or down" approach. When you rotate your hand, the curl angles barely change, but the palm normal flips completely. That's encoded.
+The palm orientation features are what separate this from typical "is the finger up or down" approaches. When a hand rotates, the curl angles barely change, but the palm normal flips completely. That signal is encoded.
 
-### Learning-First
+### Teaching New Gestures
 
-There's a built-in geometric classifier for the basics (open palm → stop, fist → grab, point → select). But the real system is learning-first: you hold a pose, hit record, rotate your hand slowly while holding it, and BROTEUS captures ~30+ samples across different orientations. The UI shows you a live rotation coverage percentage so you know when you've given it enough angles.
+1. Hold a hand pose in front of the camera
+2. Press **Record** to start capturing feature samples
+3. Slowly rotate the hand while holding the pose. This captures the gesture across multiple orientations.
+4. The UI displays a live **rotation coverage** percentage reflecting angular variety
+5. Press **Stop**, name the gesture, assign an ORION action
+6. The gesture is recognized from that point forward, including after restart
 
-On classification, learned gestures always win over geometric rules. Cosine similarity against the top-5 closest stored samples, threshold 0.82.
+Classification checks learned gestures first (cosine similarity against multi-sample clusters), then falls back to geometric rules for common poses like open palm, fist, or point. Left and right hands maintain completely separate memory files.
 
 ---
 
@@ -76,30 +85,32 @@ On classification, learned gestures always win over geometric rules. Cosine simi
 
 https://github.com/user-attachments/assets/295dcfd5-870a-42b1-9d6e-d345dccdb10f
 
+*Recognizing a learned hand animation in real-time. The purple banner indicates a temporal gesture match.*
+
 </div>
 
-Static gestures are poses. Animations are movements — a wave, a beckoning curl, a circular motion. Different problem entirely.
+Static gestures capture frozen poses. Animations capture movements: a beckoning curl, a wave, a circular "spin" motion. This is a fundamentally different recognition problem.
 
-We solve it with **Dynamic Time Warping (DTW)**. Each frame, we extract a 12-dim temporal feature vector (finger curls + palm normal + position + velocity) and push it into a sliding window of the last ~3 seconds. Every few frames, DTW compares that window against all stored animation recordings.
+BROTEUS solves it with **Dynamic Time Warping (DTW)**. Each frame, a 12-dimensional temporal feature vector is extracted (finger curls + palm normal + position + velocity) and pushed into a sliding window covering the last ~3 seconds. Every few frames, DTW compares that window against all stored animation recordings.
 
-DTW handles speed variation: a fast wave and a slow wave have different frame counts but the same shape. DTW warps one sequence onto the other and measures the alignment cost. We use a Sakoe-Chiba band to keep the warping reasonable.
+DTW handles speed variation naturally. A fast wave and a slow wave produce different frame counts but share the same underlying motion shape. DTW warps one sequence onto the other and measures alignment cost. A Sakoe-Chiba band constraint keeps the warping physically reasonable.
 
-**To teach an animation:** hit Record, perform the motion for 2–3 seconds, stop, name it. Do it 2–3 times at different speeds for better matching. That's it.
+**Teaching an animation:** Press Record, perform the motion for 2-3 seconds, press Stop, name it. Recording the same motion 2-3 times at different speeds improves matching robustness.
 
 ---
 
 ## Grasp Intelligence
 
-Click a detected object and BROTEUS shows you where to grab it. Every surface point gets scored on four criteria:
+Clicking a detected object activates **focus mode**, which computes a grasp affordance heatmap. Every surface point is scored on four criteria:
 
-1. **Normal alignment** — can a gripper approach from this angle?
-2. **Depth consistency** — is this a flat, stable surface?
-3. **Edge proximity** — how far from the boundary? (distance transform)
-4. **Centroid balance** — is the grasp centered for stability?
+1. **Normal alignment**: can a gripper approach from this angle?
+2. **Depth consistency**: is this a flat, stable region?
+3. **Edge proximity**: distance from the object boundary (via distance transform)
+4. **Centroid balance**: is the grasp centered for stability?
 
-Rendered as a green-to-red heatmap overlay. Green = good grip. Red = bad grip.
+Scores render as a continuous green-to-red heatmap overlay. Green indicates an ideal contact surface. Red indicates a poor one.
 
-Depth comes from **MiDaS** monocular estimation — one RGB camera, no depth sensor needed. We compute Sobel-based surface normals from the depth map for the normal alignment criterion.
+Depth data comes from **MiDaS** monocular estimation. One RGB camera, no depth sensor needed. Sobel-based surface normals are computed from the depth map for the normal alignment criterion.
 
 ---
 
@@ -146,16 +157,16 @@ BROTEUS is one piece of a larger system:
 
 ```
 ORION (Brain · Port 8000)
- ├── ATHENA    — Navigation · Procedural terrain · A* pathfinding
- ├── BROTEUS   — Perception · Grasp intelligence · Gestures & animations
- ├── CHIRON    — Motor cortex · ROS 2 bridge · Hardware abstraction
- ├── DAEDALUS  — Self-calibrating physics discovery (SINDy)
- └── RL Pipeline — PPO/SAC in sim · ONNX deployment at 50–200 Hz
+ ├── ATHENA    - Navigation · Procedural terrain · A* pathfinding
+ ├── BROTEUS   - Perception · Grasp intelligence · Gestures & animations
+ ├── CHIRON    - Motor cortex · ROS 2 bridge · Hardware abstraction
+ ├── DAEDALUS  - Self-calibrating physics discovery (SINDy)
+ └── RL Pipeline - PPO/SAC in sim · ONNX deployment at 50-200 Hz
 ```
 
-**BROTEUS sees → ORION decides → CHIRON moves → DAEDALUS calibrates.**
+**BROTEUS sees. ORION decides. CHIRON moves. DAEDALUS calibrates.**
 
-The target hardware is an [SO-ARM 101](https://github.com/TheRobotStudio/SO-ARM100) — a 6-DOF arm where BROTEUS is the eye, CHIRON drives the joints, and DAEDALUS closes the sim-to-real gap.
+The target hardware is an [SO-ARM 101](https://github.com/TheRobotStudio/SO-ARM100), a 6-DOF arm where BROTEUS provides perception, CHIRON drives the joints, and DAEDALUS closes the sim-to-real gap.
 
 ---
 
@@ -178,7 +189,7 @@ python -c "import urllib.request; urllib.request.urlretrieve('https://storage.go
 python -m broteus.api.server
 ```
 
-Open `http://localhost:8100/live` in your browser.
+Open `http://localhost:8100/live` in a browser.
 
 YOLO-World and MiDaS models download automatically on first use.
 
@@ -204,7 +215,7 @@ YOLO-World and MiDaS models download automatically on first use.
 ```
 broteus/
 ├── api/
-│   └── server.py           # FastAPI server — the main entry point
+│   └── server.py           # FastAPI server, the main entry point
 ├── adapters/
 │   ├── base.py              # Abstract camera adapter
 │   ├── webcam.py            # OpenCV webcam
@@ -230,16 +241,16 @@ broteus/
 
 ## Design Decisions
 
-**No hardcoded anything.** The search list starts empty. Gestures are taught, not predefined. Animations are recorded, not scripted. BROTEUS knows nothing until the user teaches it.
+**No hardcoded anything.** The search list starts empty. Gestures are taught, not predefined. Animations are recorded, not scripted. BROTEUS knows nothing until the operator teaches it.
 
-**Learning beats rules.** The geometric gesture classifier is a fallback. If you've taught BROTEUS what "thumbs up" looks like, it uses your samples, not the built-in rule.
+**Learning beats rules.** Learned gestures and animations always take priority over built-in geometric classifiers. The rule-based system is a bootstrap, not the intelligence.
 
-**The detection model is swappable.** YOLO-World today, NVIDIA Isaac ROS tomorrow. The rest of the pipeline doesn't care what's behind the `get_detector()` call.
+**Swappable detection backbone.** The detection model can be replaced without touching the rest of the pipeline. Today it runs YOLO-World on CPU. The architecture supports dropping in RT-DETR on an NVIDIA Jetson with no pipeline changes.
 
-**Per-hand independence.** Left and right hands are fully separate systems. Different classifiers, different memory files, different state. They don't interfere.
+**Per-hand independence.** Left and right hands run fully separate systems. Different classifiers, different memory files, different state. No interference.
 
-**Disk persistence.** Search lists, gesture samples, animation recordings — all JSON on disk. Kill the server, restart, everything's still there.
+**Disk persistence.** Search lists, gesture samples, animation recordings are all stored as JSON. The server can be killed and restarted without losing any learned data.
 
 ---
 
-*Built by Swan & David Young.*
+*Built by Swan Yi Htet & David Young.*
