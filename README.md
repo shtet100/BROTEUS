@@ -1,6 +1,6 @@
 # BROTEUS
 
-**Biometric Recognition & Object-Tracking Engagement with Universal Sensing**
+**Behavior Recognition, Object Tracking & Environmental Understanding System**
 
 ---
 
